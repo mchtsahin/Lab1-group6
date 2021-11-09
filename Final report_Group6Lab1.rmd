@@ -21,7 +21,7 @@ This lab report had 4 questions which were tackled by all group members equally.
 
 1. Problem 1: Mucahit Sahin & Jaskirat Marar
 2. Problem 2: Dinuke jayaweera & Filip Berndtsson
-3. Problem 3: Raja Uzair Saeed 
+3. Problem 3: Raja Uzair Saeed , Jaskirat Marar & Filip Berndtsson
 4. Problem 4: Jaskirat Marar & Filip Berndtsson
 5. Report compilation: Jaskirat M (main compiler) & others (individual collaborators)
 
@@ -112,13 +112,64 @@ We get the following values 1.110223 and 0. The correct answer in both of the ca
 
 ## 1. Write your own R function, myvar, to estimate the variance in this way
 
+The function for calculating the variance from the given expression is as follows:
+
+```{r}
+myvar <- function(x) {
+  n <- length(x)
+  variance <- 1/(n-1)*(sum(x^2) - 1/n*(sum(x)^2))
+  return(variance)
+}
+
+vec_x <- rnorm(n = 10000, mean = 5, sd = 1)
+
+myvar(vec_x)
+var(vec_x)
+```
+
+
 ## 2. Generate a vector x = (x~1~,..., x~10000~) with 10000 random numbers with mean 10^8^ and variance 1
 
 ## 3. For each subset X~*i*~ = {x~1~, ... , x~*i*~}, i = 1,..., 10000 compute the difference Y~*i*~ = myvar(X~*i*~)-var(X~*i*~), where var(X~*i*~) is the standard variance estimation function in R. Plot the dependence Y~*i*~ on *i*. Draw conclusions from this plot. How well does your function work? Can you explain the behaviour?
 
+``` {r, echo = FALSE}
+
+myvar <- function(x) {
+  n <- length(x)
+  variance <- 1/(n-1)*(sum(x^2) - 1/n*(sum(x)^2))
+  return(variance)
+}
+x <- rnorm(n = 10000, mean = 10^8, sd = 1)
+y<- c()
+for (i in 1:length(x)) {
+  y[i] = myvar(x[1:i]) - var(x[1:i])
+} 
+i = 1:10000
+ggplot() + 
+  geom_point(aes(x = i, y = y, color = "red"))
+```
+
+When we pass very large numbers to our function myvar(), there is a chance for overflow because of the square terms in the expression. As a result, some numbers maybe stored in the memory with wrong sign bit resulting in a very large variability in the calculated y term.
+
 ## 4. How can you better implement a variance estimator? Find and implement a formula that will give the same results as var()?
 
+The expression that we utilize in statistics for calculating sample variance is as follows:
 
+s = (1/(n-1)) * sum(x - xmean) ^2
+
+``` {r}
+myvar_corrected <- function(x) {
+  n = length(x)
+  variance = 1/(n-1) * sum((x - mean(x))^2)
+  return(variance)
+}
+vec_x <- rnorm(n = 10000, mean = 5, sd = 1)
+myvar_corrected(vec_x)
+var(vec_x)
+myvar(vec_x)
+```
+
+As it is clearly seen, the precision of the new function is closer to the actual value of the variance. We were able to achieve this because we were able to compute differences before we squared any potential rounding errors.
 
 # Problem 4
 
@@ -293,8 +344,10 @@ p3
 
 
 As we can see from the comparison of the results from the three computation expressions, A is the least flexible with a max limit of n upto 170. This is because beyond this, the numerator of the expression goes into overflow. 
-Next, we see the results of B and while B increases the flexibility of A and can compute results upto n = 1000, its is also only able to do so, as long as the numerator doesn't overflow. Therefore, it allows for every value of n, computations for all those values of k where prod((k+1):1) doesn't overflow. For the values chosen, it was observed that the max tolerance (n-k) ~150  
+
+Next, we see the results of B and while B increases the flexibility of A and can compute results upto n = 1000, its is also only able to do so, as long as the numerator doesn't overflow. Therefore, it allows for every value of n, computations for all those values of k where prod((k+1):1) doesn't overflow. For the values chosen, it was observed that the max tolerance (n-k) ~150. but we get many more values which go to inf as compared to A.
+
 Moving onto C, It is easily the most flexible of the 3, implying that the it gives a result for every combination of n & k. The reason for this is quite obvious that the vector being passed to prod() is never leading to an overflow as the division results in the cancellations that eliminate large numbers that can lead to overflow condition.
 
-As a result we can conclude that computations due to A 7 B expressions have overflow issues whereas 3 doesn't. It is interesting to note though, that C does face the additional issues related to rounding. because, when the values of n & k become moderately large, there is a propagation of rounding errors and hence we are given an approximated value that is different from the expected value of the expression.
+As a result we can conclude that computations due to A & B expressions have overflow issues whereas C doesn't. Between A & B, it is actually B where more cases of overflow are occurring.It is interesting to note though, that C does face the additional issues related to rounding. because, when the values of n & k become moderately large, there is a propagation of rounding errors and hence we are given an approximated value that is different from the expected value of the expression.
 
